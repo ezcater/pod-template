@@ -3,7 +3,7 @@ require 'xcodeproj'
 module Pod
 
   class ProjectManipulator
-    attr_reader :configurator, :xcodeproj_path, :platform, :remove_demo_target, :string_replacements, :prefix
+    attr_reader :configurator, :xcodeproj_path, :platform, :string_replacements, :prefix
 
     def self.perform(options)
       new(options).perform
@@ -13,7 +13,6 @@ module Pod
       @xcodeproj_path = options.fetch(:xcodeproj_path)
       @configurator = options.fetch(:configurator)
       @platform = options.fetch(:platform)
-      @remove_demo_target = options.fetch(:remove_demo_project)
       @prefix = options.fetch(:prefix)
     end
 
@@ -41,46 +40,6 @@ module Pod
       project_metadata_item.new_file "../" + @configurator.pod_name  + ".podspec"
       project_metadata_item.new_file "../README.md"
       project_metadata_item.new_file "../LICENSE"
-    end
-
-    def remove_demo_project
-      app_project = @project.native_targets.find { |target| target.product_type == "com.apple.product-type.application" }
-      test_target = @project.native_targets.find { |target| target.product_type == "com.apple.product-type.bundle.unit-test" }
-      test_target.name = @configurator.pod_name + "_Tests"
-
-      # Remove the implicit dependency on the app
-      test_dependency = test_target.dependencies.first
-      test_dependency.remove_from_project
-      app_project.remove_from_project
-
-      # Remove the build target on the unit tests
-      test_target.build_configuration_list.build_configurations.each do |build_config|
-        build_config.build_settings.delete "BUNDLE_LOADER"
-      end
-
-      # Remove the references in xcode
-      project_app_group = @project.root_object.main_group.children.select { |group| group.display_name.end_with? @configurator.pod_name }.first
-      project_app_group.remove_from_project
-
-      # Remove the product reference
-      product = @project.products.select { |product| product.path == @configurator.pod_name + "_Example.app" }.first
-      product.remove_from_project
-
-      # Remove the actual folder + files for both projects
-      `rm -rf templates/ios/Example/PROJECT`
-      `rm -rf templates/swift/Example/PROJECT`
-
-      # Replace the Podfile with a simpler one with only one target
-      podfile_path = project_folder + "/Podfile"
-      podfile_text = <<-RUBY
-use_frameworks!
-target '#{test_target.name}' do
-  pod '#{@configurator.pod_name}', :path => '../'
-  
-  ${INCLUDED_PODS}
-end
-RUBY
-      File.open(podfile_path, "w") { |file| file.puts podfile_text }
     end
 
     def project_folder

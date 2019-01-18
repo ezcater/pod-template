@@ -76,14 +76,7 @@ module Pod
         when :macos
           ConfigureMacOSSwift.perform(configurator: self)
         when :ios
-          framework = self.ask_with_answers("What language do you want to use?", ["Swift", "ObjC"]).to_sym
-          case framework
-            when :swift
-              ConfigureSwift.perform(configurator: self)
-
-            when :objc
-              ConfigureIOS.perform(configurator: self)
-          end
+          ConfigureSwift.perform(configurator: self)
       end
 
       replace_variables_in_files
@@ -124,17 +117,25 @@ module Pod
     end
 
     def replace_variables_in_files
-      file_names = ['POD_LICENSE', 'POD_README.md', 'NAME.podspec', '.travis.yml', podfile_path]
+      file_names = ['POD_LICENSE', 'POD_README.md', 'NAME.podspec', podfile_path]
       file_names.each do |file_name|
         text = File.read(file_name)
         text.gsub!("${POD_NAME}", @pod_name)
-        text.gsub!("${REPO_NAME}", @pod_name.gsub('+', '-'))
+        text.gsub!("${REPO_NAME}", repo_name)
         text.gsub!("${USER_NAME}", user_name)
         text.gsub!("${USER_EMAIL}", user_email)
         text.gsub!("${YEAR}", year)
         text.gsub!("${DATE}", date)
         File.open(file_name, "w") { |file| file.puts text }
       end
+    end
+
+    def repo_name
+        fixed_name = @pod_name.gsub('+', '-')
+        if fixed_name.start_with?("EZ")
+            fixed_name = fixed_name[2..-1]
+        end
+        "ios-#{fixed_name}".downcase!
     end
 
     def add_pod_to_podfile podname
