@@ -1,5 +1,7 @@
 # ${POD_NAME}
 
+The ${POD_NAME} framework contains [TODO: fill in a short description of the framework].
+
 ## Example
 
 To run the example project, clone the repo, and run `pod install` from the Example directory first.
