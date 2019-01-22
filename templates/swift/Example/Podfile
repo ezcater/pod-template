@@ -1,3 +1,6 @@
+source 'https://github.com/CocoaPods/Specs'
+source 'git@github.com:ezcater/iOS-Specs'
+
 platform :ios, '10.0'
 use_frameworks!
 
