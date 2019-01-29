@@ -10,6 +10,8 @@ opt_in_rules:
   - force_unwrapping
 excluded: # paths to ignore during linting. Takes precedence over `included`.
   - Pods
+included:
+  - ../${POD_NAME}/Classes
 
 # configurable rules can be customized from this configuration file
 statement_position:
